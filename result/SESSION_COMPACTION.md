@@ -112,3 +112,12 @@
 - agent_outcome: skipped
 - workflow_status: failure
 - note: Agent-created compaction is authoritative; this closeout records how the run ended.
+
+## Workflow closeout
+
+- timestamp: 2026-11-11T13:03:57Z
+- run_id: 43025501412
+- event: schedule
+- agent_outcome: skipped
+- workflow_status: failure
+- note: Agent-created compaction is authoritative; this closeout records how the run ended.
