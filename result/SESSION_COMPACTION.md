@@ -1,372 +1,105 @@
 # Session Compaction
 
-Last updated: 2026-11-01T05:25:00Z
-Target: `https://console.byteplus.com` (authorized routes: `/datarangers`, `/datatester`, `/ark`, `/ai`, `/alb`)
-Target hash: `03aef71f1ba65c11c7ba408a0ebd646abc6e8850fd4cf34ff397d9096f808f27`
-Status: completed (`result/SCAN_COMPLETE` exists; no pending required work)
+## Current target (2026-11-11)
 
-## Session summary
+- Run id: 42952380212 (schedule); resumed same target hash
+  `851361f8840b1efe993289fa5efa40d815c25b00e22682335fd394ab32253ba7`.
+- Authorized target URLs from `data/targets.txt`:
+  - `https://console.byteplus.com/finance/overview`
+  - `https://console.byteplus.com/workorder/list/`
+  - Task: enumerate/test all sub-routes under these; also test related
+    in-scope subdomains/endpoints if interesting.
+- Status: in progress (scan not complete). `result/SCAN_COMPLETE` NOT written.
 
-This maintenance session added continuity/auth/scope rules and recorded the
-completed scan. No new target testing was performed.
+## Authentication status
 
-## Discovered surface
-
-- Five top-level routes: `/datarangers`, `/datatester`, `/ark`, `/ai`, `/alb`.
-- All discovered sub-routes and 48 inventoried APIs.
-- Subdomain inventory: `console.byteplus.com` completed.
-- Client-side reports under `result/client-side/console.byteplus.com/`;
-  server-side report under `result/server-side/console.byteplus.com/`.
-
-## Tested
-
-- Same-origin routes, sub-routes, APIs, and loaded JavaScript for all five
-  top-level routes, including cross-tenant checks with two test accounts.
-- Confirmed low-impact read-only cross-project IDOR (`VULN-20261031-001`) in
-  DataFinder `common_settings`; benign presentation settings only, below the
-  notification bar.
-- No high-impact IDOR/BAC, XSS execution, or sensitive postMessage impact
-  confirmed.
-- Unresolved: Ark managed-agent sub-routes were not activated for the test
-  accounts; client-side missing-origin listeners and config-driven redirect
-  candidates showed no demonstrable impact.
-
-## Pending / next
-
-- No required work remains for the current completed scan.
-- If new subdomains, endpoints, or scope are supplied, verify authorization
-  before testing and record new discoveries here immediately.
-- Do not repeat prior exclusions automatically; verify against `data/` and the
-  program scope, or mark `Scope Unverified`.
-
-## Authentication
-
-- Test account A: AccountID `3000823185` (`test-user-123`).
-- Test account B: AccountID `3001021825` (`testt456`).
-- Cached auth headers belong only in `creds/auth-headers.txt`; never copy
-  cookies, tokens, or secrets into this file, reports, or logs.
+- Root login at `https://signin.byteplus.com/auth/login/` succeeded with test
+  Account A after solving the BytePlus slider captcha via trusted CDP input
+  and an in-page normalized-cross-correlation puzzle solver.
+- Cookies for Account A saved to `creds/auth-headers.txt` (never print them).
+- Account B (`testt456`) not yet logged in; requires a separate isolated
+  session/captcha solve. Needed for cross-account IDOR proof.
+- Test account A AccountID observed in prior run: `3000823185`; B: `3001021825`
+  (historical).
 
 ## Scope decisions
 
-- `console.byteplus.com` is the authorized host for this completed run; only
-  its five listed top-level routes were exercised.
-- Other `byteplus.com` subdomains are **scope-unverified**, not automatically
-  out of scope. Verify program/data authorization before testing and record
-  `Scope Unverified` when ambiguous.
-- The related-subdomains note is scope input, not blanket authorization for
-  every `byteplus.com` subdomain.
+- `console.byteplus.com` and its auth subdomain `signin.byteplus.com` are the
+  in-scope console/auth surface; login redirect confirmed between them.
+- Other `byteplus.com` subdomains remain `Scope Unverified` until a concrete
+  endpoint is discovered and checked. Do not blanket-test.
+- Captcha/verification service is on `verify.rmc.byteplusbiz.com`; it is a
+  third-party anti-bot domain and is NOT tested directly (out of scope).
+
+## Discovered surface (finance)
+
+- Top-level route `/finance/overview` (page loaded, account A).
+- Finance sidebar sub-routes observed: Overview, Bill management, Order
+  management, Renewal management, Unsubscription management, Instance
+  management, Resource package.
+- Finance APIs observed on `/finance/overview` (all under
+  `https://console.byteplus.com`):
+  - GET `/api/top/account_verify/ap-southeast-1/2018-01-01/GetProfileInfo`
+  - GET `/api/financial/const/getExpenseConfigForFE`
+  - GET `/api/top/bill_volcano_engine/ap-singapore-1/2020-01-01/GetAccountGrayStatus`
+  - GET `/api/top/bill_volcano_engine/ap-singapore-1/2022-01-01/GetCountryAreaCfg`
+  - POST `/api/top/account_verify/ap-southeast-1/2018-01-01/GetRawProfileInfo`
+  - POST `/api/top/bill/ap-singapore-1/2020-01-01/ListAccountFinancialRole`
+  - POST `/api/top/bill/ap-singapore-1/2020-01-01/GetBalanceFromTradeBalance`
+  - GET `/api/top/bill/ap-singapore-1/2020-01-01/CountCoupon`
+  - GET `/api/top/bill/ap-singapore-1/2020-01-01/GetQuotaAcctInfo`
+  - GET `/api/top/bill/ap-singapore-1/2020-01-01/GetCurrency`
+  - GET `/api/top/bill/ap-singapore-1/2020-01-01/GetBcDiscountPriceAuth`
+  - GET `/api/top/bill/ap-singapore-1/2022-01-01/ListMonthlyBillOpen`
+  - POST `/api/financial/trade/HasArrearsAlert`
+  - POST `/api/financial/qualification/GetWhitelistShortTermProducts`
+  - GET `/api/top/consolemessage/ap-singapore-1/2024-05-01/GetInMailUnreadCount`
+  - POST `/api/top/consolemessage/ap-singapore-1/2024-05-01/ListInMail`
+  - POST `/api/top/ticket/ap-southeast-1/2021-01-01/GetTicketCountForUser`
+  - POST `/api/top/account_management/ap-southeast-1/2018-01-01/GetAccountLoginSecurity`
+  - GET `/console.byteplus.com/signin/status/identity`
+- Static JS (not saved): `res.gcloudcache.com/bp-fe/finance/volcf-sdk-app/...`
+  and `byteplus_volcf_navbar/...`.
+
+## Tested
+
+- Login/auth flow: completed with Account A.
+- No API vulnerability confirmed yet.
+
+## Pending / next
+
+1. Enumerate finance sub-route URLs and their unique APIs; record in
+   `result/inventory/api-routes.md`.
+2. Test finance APIs for IDOR/BOLA, BAC, mass assignment, PII leakage using
+   account A (and B when available).
+3. Explore `/workorder/list/`, enumerate ticket APIs; test IDOR/BOLA on
+   ticket IDs/attachments and PII leakage.
+4. Client-side regex/source-sink review for each sub-route if time permits.
+5. Log in Account B in an isolated context for cross-account proof.
+
+## Important observations / blockers
+
+- Slider captcha on login must be solved; challenge expires quickly and
+  repeated stale verifies return `NotFoundChallengeId`. Solver succeeded once.
+- The test account has no billing account set up ("Billing account not setup
+  yet"), so many finance reads may be empty; ticket/workorder data may be
+  richer.
+- Keep every finding evidence-backed; do not report status codes or inert
+  fields.
+
+## Historical sessions (previous target: /datarangers, /datatester, /ark, /ai, /alb)
+
+- Completed scan reported low-impact read-only cross-project IDOR
+  `VULN-20261031-001` in DataFinder `common_settings` (benign presentation
+  settings). Do not repeat completed work for those routes.
+- Prior workflow closeouts were failures/skips; agent-created compaction is
+  authoritative.
 
 ## Workflow closeout
 
-- timestamp: 2026-11-01T06:04:54Z
-- run_id: 41279118674
-- event: workflow_dispatch
+- timestamp: 2026-11-11T03:46:51Z
+- run_id: 42952380212
+- event: schedule
 - agent_outcome: failure
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-01T06:24:09Z
-- run_id: 41280304453
-- event: workflow_dispatch
-- agent_outcome: failure
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-01T06:35:13Z
-- run_id: 41280842601
-- event: workflow_dispatch
-- agent_outcome: failure
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-01T06:42:17Z
-- run_id: 41281582964
-- event: workflow_dispatch
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-01T12:56:45Z
-- run_id: 41308755977
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-01T21:53:14Z
-- run_id: 41354170357
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-02T03:47:09Z
-- run_id: 41384816143
-- event: workflow_dispatch
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-02T05:15:51Z
-- run_id: 41392843883
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-02T15:13:44Z
-- run_id: 41469255736
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-03T00:47:36Z
-- run_id: 41555154871
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-03T13:54:04Z
-- run_id: 41648289254
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-03T18:39:00Z
-- run_id: 41695597716
-- event: workflow_dispatch
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-03T23:03:44Z
-- run_id: 41735852269
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-04T05:36:51Z
-- run_id: 41780151053
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-04T14:02:10Z
-- run_id: 41843346032
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-04T23:27:10Z
-- run_id: 41933639938
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-05T05:54:52Z
-- run_id: 41976838963
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-05T14:23:52Z
-- run_id: 42044381316
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-05T23:29:29Z
-- run_id: 42129493105
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-06T02:24:42Z
-- run_id: 42149929050
-- event: workflow_dispatch
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-06T03:43:18Z
-- run_id: 42158071811
-- event: workflow_dispatch
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-06T13:21:47Z
-- run_id: 42224633263
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-06T22:29:28Z
-- run_id: 42304879443
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-07T03:28:38Z
-- run_id: 42334054790
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-07T12:00:18Z
-- run_id: 42370429619
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-07T17:26:04Z
-- run_id: 42396145737
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-07T21:10:12Z
-- run_id: 42414426261
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-08T02:55:57Z
-- run_id: 42440466434
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-08T12:20:03Z
-- run_id: 42479610125
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-08T21:26:15Z
-- run_id: 42525056186
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-09T03:16:29Z
-- run_id: 42555322268
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-09T14:31:19Z
-- run_id: 42635214858
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-10T00:56:06Z
-- run_id: 42731854679
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-10T13:53:16Z
-- run_id: 42828407505
-- event: schedule
-- agent_outcome: skipped
-- workflow_status: failure
-- note: Agent-created compaction is authoritative; this closeout records how the run ended.
-
-## Workflow closeout
-
-- timestamp: 2026-11-10T22:37:42Z
-- run_id: 42916048796
-- event: schedule
-- agent_outcome: skipped
 - workflow_status: failure
 - note: Agent-created compaction is authoritative; this closeout records how the run ended.
