@@ -130,3 +130,35 @@
 - agent_outcome: skipped
 - workflow_status: failure
 - note: Agent-created compaction is authoritative; this closeout records how the run ended.
+
+
+## Current run (resumed 2026-11-12)
+
+- Status: in progress. Account A session restored in headless Chrome via CDP cookie injection.
+- Auth: `creds/auth-headers.txt` Account A valid (GetProfileInfo 200, AccountId 3000823185). Account B still not logged in.
+- Browser: authenticated at https://console.byteplus.com/finance/overview (200, page loaded).
+- Finance route tree extracted from `main.2eb41fdf.js`:
+  - /finance/overview
+  - /finance/bill/detail, /bill/tag, /bill/split-bill, /bill/cost-bill, /bill/cost-analyse, /bill/report, /bill/alarm-sign, /bill/auto-tos, /bill/bill-summary
+  - /finance/order, /order/detail/:OrderID, /order/pay
+  - /finance/renew, /renew/manual-renew, /renew/auto-renew, /renew/update-auto-renew, /renew/no-renew, /renew/restore-manual-renew, /renew/export-renew-list
+  - /finance/unsubscribe, /unsubscribe/confirm, /unsubscribe/confirm-inactive
+  - /finance/instance-manage, /finance/resource-package, /finance/saving-plan
+  - /finance/payment/transactions, /make-payment, /payment-methods, /payment-cashier
+  - /finance/coupon, /coupon/:CouponID, /coupon/pickup-coupon, /coupon/voucher/:PickupVoucherID
+  - /finance/invoice-manage, /invoice-manage/:RecordType/:RecordID, /edit-email, /edit-tax-information, /list-view
+  - /finance/busniess-finance, /relation, /contract-discount, /resource-transfer, /transfer/:Status/:AccountID/:TransferApplicationNo, /details/:Type/:AccountID/:TransferApplicationNo
+  - /finance/contract, /mail-detail/:contractNo, /sign-quote/:contractNo, /apply-paper
+  - /finance/budget/cost, /budget-edit, /budget-detail
+  - /finance/.../export (file)
+- Next: crawl finance sub-routes for APIs (server-side first), then test IDOR/BAC/mass-assignment; then workorder/list route.
+- Note: avoid long monolithic scripts; checkpoint after each batch.
+
+## Workflow closeout
+
+- timestamp: 2026-11-12T04:48:40Z
+- run_id: 43155553208
+- event: schedule
+- agent_outcome: failure
+- workflow_status: failure
+- note: Agent-created compaction is authoritative; this closeout records how the run ended.
